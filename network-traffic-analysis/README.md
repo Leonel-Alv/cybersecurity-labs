@@ -19,15 +19,13 @@ I tested ICMP, HTTP, FTP and SSH. With FTP I was able to see the login informati
 
 I created two Linux virtual machines, one for the client and another for the server. Both were on the same network and had different MAC addresses.
 
-When I checked the IP addresses with ip a, both machines were using 10.0.2.3.
+When I checked the IP configuration, the server was using 10.0.2.3. On the client, 10.0.2.3 was also assigned, together with 10.0.2.4.
 
-I decided to renew the IP configuration on the client. I released its DHCP lease, cleared the addresses from the interface and then requested a new IP:
+Because 10.0.2.3 was present on both machines, I removed the duplicate address from the client:
 
-    sudo dhclient -r enp0s3
-    sudo ip addr flush dev enp0s3
-    sudo dhclient enp0s3
+    sudo ip addr del 10.0.2.3/24 dev enp0s3
 
-After running ip a again, the server was still using 10.0.2.3 and the client was now using 10.0.2.4.
+After running ip a again, the server remained on 10.0.2.3 and the client was using 10.0.2.4.
 
 ![IP conflict identified and corrected](images/ip-conflict-resolution.png)
 
@@ -61,7 +59,7 @@ For the HTTP test, I accessed the Apache server from the client using:
 
 At the same time, Wireshark was capturing HTTP traffic on the server.
 
-In the capture I could see the communication between both IP addresses and the TCP handshake.
+In the capture I could see the communication between both IP addresses and the TCP handshake used to establish the connection.
 
 ![HTTP traffic and Apache server](images/http-traffic.png)
 
@@ -75,9 +73,9 @@ After logging in, I went back to Wireshark and used Follow FTP Stream.
 
 ![FTP credentials and commands visible in Wireshark](images/ftp-plaintext.png)
 
-In the stream I could see the username and password entered from the client, as well as the FTP commands that were used during the session.
+In the stream I could see the username and password entered from the client, as well as the FTP commands used during the session.
 
-This showed that the FTP session was being sent in readable text.
+This showed that the FTP login information and commands were being sent in readable text.
 
 ---
 
@@ -100,14 +98,14 @@ This time the contents were encrypted and unreadable. Unlike FTP, I could not se
 | **FTP** | Username, password and FTP commands were readable |
 | **SSH** | Session contents were encrypted and unreadable |
 
-The difference was easy to see in Wireshark. FTP showed the information in readable text, while SSH protected the contents of the session.
+The difference was easy to see in Wireshark. FTP showed the login information and commands in readable text, while SSH protected the contents of the session.
 
 ## Key Findings
 
 | Test | Result |
 |---|---|
 | Environment | **Two Linux VMs, client and server** |
-| Initial IPs | **Both machines were using 10.0.2.3** |
+| Duplicate IP | **10.0.2.3 was assigned to both machines** |
 | After correction | **Server 10.0.2.3 / Client 10.0.2.4** |
 | ICMP | **Echo Requests and Replies visible** |
 | HTTP | **TCP handshake visible** |
@@ -122,8 +120,10 @@ The difference was easy to see in Wireshark. FTP showed the information in reada
 
 This project gave me a practical view of what different protocols look like in Wireshark.
 
-I first had to correct the IP configuration because both machines were using the same address. After that, I captured ICMP and HTTP traffic and could see the communication between the client and server.
+Before starting the traffic analysis, I had to correct the IP configuration because 10.0.2.3 was assigned to both machines. After removing the duplicate address from the client, the server remained on 10.0.2.3 and the client used 10.0.2.4.
 
-The FTP and SSH tests were the most useful comparison. In FTP I could read the login information and commands directly from the stream. With SSH, I could still see the traffic, but the contents were encrypted.
+With ICMP I could see the requests and replies between the two machines. With HTTP I could follow the connection between the client and the Apache server.
 
-This made it easier to understand the difference between plaintext and encrypted communication.
+The FTP and SSH tests were the most useful comparison. In FTP I could read the login information and commands directly from the stream. With SSH, I could still see that traffic was being exchanged, but the contents were encrypted.
+
+This made the difference between plaintext and encrypted communication much easier to understand.
