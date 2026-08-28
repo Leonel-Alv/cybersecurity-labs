@@ -23,3 +23,4 @@ Hands-on cybersecurity labs and projects focused on **network analysis, security
 |---|---|
 | **[Network Traffic Analysis](network-traffic-analysis/)** | Network traffic analysis and troubleshooting using Wireshark, covering ICMP, HTTP, FTP and SSH |
 | **[Samba File Server](samba-file-server/)** | Samba file sharing between Linux and Windows systems |
+| **[Linux DHCP Server and Router](linux-dhcp-router/)** | Ubuntu Server configured for DHCP, routing, NAT and connectivity for Linux and Windows clients |
